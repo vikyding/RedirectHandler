@@ -1,0 +1,11 @@
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\bin\Debug\netcoreapp2.1\RedirectHandler.deps.json
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\bin\Debug\netcoreapp2.1\RedirectHandler.dll
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\bin\Debug\netcoreapp2.1\RedirectHandler.pdb
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\obj\Debug\netcoreapp2.1\RedirectHandler.csprojAssemblyReference.cache
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\obj\Debug\netcoreapp2.1\RedirectHandler.csproj.CoreCompileInputs.cache
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\obj\Debug\netcoreapp2.1\RedirectHandler.AssemblyInfoInputs.cache
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\obj\Debug\netcoreapp2.1\RedirectHandler.AssemblyInfo.cs
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\obj\Debug\netcoreapp2.1\RedirectHandler.dll
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\obj\Debug\netcoreapp2.1\RedirectHandler.pdb
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\bin\Debug\netcoreapp2.1\RedirectHandler.runtimeconfig.json
+C:\Users\mending\source\repos\RedirectHandler\RedirectHandler\bin\Debug\netcoreapp2.1\RedirectHandler.runtimeconfig.dev.json
