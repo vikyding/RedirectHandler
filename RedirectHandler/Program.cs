@@ -9,13 +9,8 @@ namespace RedirectHandler
 
         
         static void Main(String[] args) {
-            DelegateTest dt = new DelegateTest();
-            Pt pt = dt.PrintMessage;
-            Pt pt1 = dt.PrintMsg1;
-            Pt pt2 = dt.PrintMsg2;
-
-            Pt pt_s = DelegateTest.PrintMsg3;
-            Debug.WriteLine(pt_s("test delegate"));
+            RedirectDepth rd = new RedirectDepth();
+            rd.validate(3);
                
         }
     }

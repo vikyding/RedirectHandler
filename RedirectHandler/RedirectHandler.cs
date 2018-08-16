@@ -6,8 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace RedirectHandler
 {
@@ -41,9 +43,9 @@ namespace RedirectHandler
 
         }
 
-        public async Task<HttpResponseMessage> handlerRedirect(HttpRequestMessage httpRe) {
+        //public async Task<HttpResponseMessage> handlerRedirect(HttpRequestMessage httpRe) {
 
-        }
+        //}
 
         /// <summary>
         /// Send Request 
@@ -53,33 +55,54 @@ namespace RedirectHandler
         /// <returns></returns>
         public override async Task<HttpResponseMessage> sendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            return await sendAsync(request, cancellationToken, 0);
+        }
+
+        private async Task<HttpResponseMessage> sendAsync(HttpRequestMessage request, CancellationToken cancellationToken, int redirectCount)
+        {
             // check request whether it's permanetly redirected
-                //Yes -> using cached redirection to send request
-                //No  -> continue
+            if (CheckRedirectPermanentCache(request))
+            {
+                //TO-DO
+            }
 
             // send request first time to get response
+            var response = await base.SendAsync(request, cancellationToken);
 
+            // unuse right not
             // check redirected is disable or not
-                // Disabled return response 
-                // Not disanled -> continue
+            // Disabled return response 
+            // Not disanled -> continue
 
-            // check response's location not null
-                //Null -> return response
-                //No  -> continue
 
             // check whether redirect count over maxRedirects
-                // Yes -> throws exception?
-                // No
-                    // check response status code 
-                        //need to be redirected
-                            // 
-                            // general copy request with internal copyRequest(see copyRequest for details) Method 
-                            // status code == 308 : add permanent redirection to cache 
-                            // status code == 303: change request method from post to get and content to be null
-                            // set buffed request body
-                            // send redirect request to get reponse      
-                        //no need -> return response
+            if (++redirectCount > maxRedirects)
+            {
+                return response;
+            }
 
+            // check response status code 
+            if (IsRedirect(response.StatusCode))
+            {
+                //need to be redirected
+                // general copy request with internal copyRequest(see copyRequest for details) Method 
+                var newRequest = CopyRequest(request, response);
+
+                // status code == 308 : add permanent redirection to cache 
+                // TO-DO
+
+                // status code == 303: change request method from post to get and content to be null
+                if (response.StatusCode == HttpStatusCode.SeeOther)
+                {
+                    newRequest.Content = null;
+                    newRequest.Method = HttpMethod.Get;
+                }
+
+                // send redirect request to get reponse      
+                response = await base.SendAsync(newRequest, cancellationToken);
+
+            }
+            return response;
         }
 
         /// <summary>
@@ -91,7 +114,7 @@ namespace RedirectHandler
         /// <remarks>
         /// Remove the authorization header if authority of the location header is different with the origianl target URL
         /// </remarks>
-        internal HttpRequestMessage copyRequest(HttpRequestMessage originalRequest, HttpResponseMessage originalResponse)
+        internal HttpRequestMessage CopyRequest(HttpRequestMessage originalRequest, HttpResponseMessage originalResponse)
         {
             var newRequest = new HttpRequestMessage(originalRequest.Method, originalRequest.RequestUri);
             newRequest.RequestUri = originalResponse.Headers.Location;
@@ -111,6 +134,16 @@ namespace RedirectHandler
             return newRequest;
         }
 
-        private StreamContent c
+
+        private bool CheckRedirectPermanentCache(HttpRequestMessage originalRequest) {
+            return false;
+        }
+
+        private bool IsRedirect(HttpStatusCode statusCode)
+        {
+            return (int)statusCode >= 300 && (int)statusCode < 400 && statusCode != HttpStatusCode.NotModified && statusCode != HttpStatusCode.UseProxy;
+        }
+
+        
     }
 }
