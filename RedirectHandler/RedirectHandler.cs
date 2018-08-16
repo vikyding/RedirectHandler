@@ -19,46 +19,37 @@ namespace RedirectHandler
     class RedirectHandler : DelegatingHandler
     {
 
-        private int maxRedirects;
+        private const int maxRedirects = 5;
+
 
         /// <summary>
-        /// Constructs a new RedirectHandler <see cref="RedirectHandler"/>
+        /// Constructs a new <see cref="RedirectHandler"/> 
         /// </summary>
-        /// <param name="innerHander">A Http message handler to pass to the <see cref="InnerHandler"/> for sending requests.</param>
-        /// <param name="maxRedirects">A Integer value to pass to <see cref="maxRedirects"/> for limiting how many redirects are allowed for requests</param>
-        public RedirectHandler(HttpMessageHandler innerHander, int maxRedirects)
-        {
-            if (maxRedirects < 0)
-            {
-
-            }
-        }
-
-        /// <summary>
-        /// Constructs a new RedirectHandler <see cref="RedirectHandler"/> 
-        /// </summary>
-        /// <param name="innerHandler">A Http message handler to pass to the <see cref="InnerHandler"/> for sending requests.</param>
+        /// <param name="innerHandler">A http message handler to pass to the <see cref="InnerHandler"/> for sending requests.</param>
         public RedirectHandler(HttpMessageHandler innerHandler)
         {
-
+            InnerHandler = innerHandler;
         }
 
-        //public async Task<HttpResponseMessage> handlerRedirect(HttpRequestMessage httpRe) {
-
-        //}
-
         /// <summary>
-        /// Send Request 
+        /// Sends the Request 
         /// </summary>
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override async Task<HttpResponseMessage> sendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        /// <returns><see cref="HttpResponseMessage"/></returns>
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return await sendAsync(request, cancellationToken, 0);
+            return SendAsync(request, cancellationToken, 0);
         }
 
-        private async Task<HttpResponseMessage> sendAsync(HttpRequestMessage request, CancellationToken cancellationToken, int redirectCount)
+        /// <summary>
+        /// Sends the request 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="redirectCount"></param>
+        /// <returns></returns>
+        private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken, int redirectCount)
         {
             // check request whether it's permanetly redirected
             if (CheckRedirectPermanentCache(request))
@@ -69,12 +60,6 @@ namespace RedirectHandler
             // send request first time to get response
             var response = await base.SendAsync(request, cancellationToken);
 
-            // unuse right not
-            // check redirected is disable or not
-            // Disabled return response 
-            // Not disanled -> continue
-
-
             // check whether redirect count over maxRedirects
             if (++redirectCount > maxRedirects)
             {
@@ -84,7 +69,7 @@ namespace RedirectHandler
             // check response status code 
             if (IsRedirect(response.StatusCode))
             {
-                //need to be redirected
+                
                 // general copy request with internal copyRequest(see copyRequest for details) Method 
                 var newRequest = CopyRequest(request, response);
 
@@ -99,7 +84,7 @@ namespace RedirectHandler
                 }
 
                 // send redirect request to get reponse      
-                response = await base.SendAsync(newRequest, cancellationToken);
+                response = await this.SendAsync(newRequest, cancellationToken, redirectCount);
 
             }
             return response;
@@ -112,33 +97,53 @@ namespace RedirectHandler
         /// <param name="originalResponse">a old response offers header location information to be compared with old request target URL</param>
         /// <returns>The <see cref="HttpRequestMessage"/></returns>
         /// <remarks>
+        /// Copy original request's headers, properities, content and set new uri to new request from original response
         /// Remove the authorization header if authority of the location header is different with the origianl target URL
         /// </remarks>
         internal HttpRequestMessage CopyRequest(HttpRequestMessage originalRequest, HttpResponseMessage originalResponse)
         {
             var newRequest = new HttpRequestMessage(originalRequest.Method, originalRequest.RequestUri);
+
             newRequest.RequestUri = originalResponse.Headers.Location;
 
             foreach (var header in originalRequest.Headers)
             {
                 newRequest.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
+
             foreach (var property in originalRequest.Properties)
             {
                 newRequest.Properties.Add(property);
             }
+
             if (String.Compare(newRequest.RequestUri.Host, originalRequest.RequestUri.Host, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 newRequest.Headers.Authorization = null;
             }
+
+            if (originalRequest.Content != null && originalRequest.Content.Headers.ContentLength != 0)
+            {
+                newRequest.Content = new StreamContent(originalRequest.Content.ReadAsStreamAsync().Result);
+            }
+
             return newRequest;
         }
 
-
+        /// <summary>
+        /// Check whether the request is permanently redirected by permanentRedirectCache
+        /// </summary>
+        /// <param name="originalRequest">The http request message</param>
+        /// <returns></returns>
         private bool CheckRedirectPermanentCache(HttpRequestMessage originalRequest) {
+
             return false;
         }
 
+        /// <summary>
+        /// Checks the response's status code
+        /// </summary>
+        /// <param name="statusCode">The response status code <see cref="HttpStatusCode"/></param>
+        /// <returns></returns>
         private bool IsRedirect(HttpStatusCode statusCode)
         {
             return (int)statusCode >= 300 && (int)statusCode < 400 && statusCode != HttpStatusCode.NotModified && statusCode != HttpStatusCode.UseProxy;
