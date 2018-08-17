@@ -11,12 +11,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 
-namespace RedirectHandler
+namespace Msgraph
 {
     /**
      * 
      * */
-    class RedirectHandler : DelegatingHandler
+    public class RedirectHandler : DelegatingHandler
     {
 
         private const int maxRedirects = 5;
@@ -34,60 +34,71 @@ namespace RedirectHandler
         /// <summary>
         /// Sends the Request 
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="request">The http request message <see cref="HttpRequestMessage"/></param>
+        /// <param name="cancellationToken">The cancellationToken <see cref="CancellationToken"/></param>
         /// <returns><see cref="HttpResponseMessage"/></returns>
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            return SendAsync(request, cancellationToken, 0);
-        }
-
-        /// <summary>
-        /// Sends the request 
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
-        /// <param name="redirectCount"></param>
-        /// <returns></returns>
-        private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken, int redirectCount)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             // check request whether it's permanetly redirected
-            if (CheckRedirectPermanentCache(request))
-            {
-                //TO-DO
-            }
+            // TO-DO
 
             // send request first time to get response
             var response = await base.SendAsync(request, cancellationToken);
 
-            // check whether redirect count over maxRedirects
-            if (++redirectCount > maxRedirects)
-            {
-                return response;
-            }
-
             // check response status code 
             if (IsRedirect(response.StatusCode))
             {
-                
+
                 // general copy request with internal copyRequest(see copyRequest for details) Method 
                 var newRequest = CopyRequest(request, response);
+                StreamContent content = null;
 
-                // status code == 308 : add permanent redirection to cache 
-                // TO-DO
-
-                // status code == 303: change request method from post to get and content to be null
-                if (response.StatusCode == HttpStatusCode.SeeOther)
+                if (request.Content != null && request.Content.Headers.ContentLength != 0)
                 {
-                    newRequest.Content = null;
-                    newRequest.Method = HttpMethod.Get;
+                    content = new StreamContent(request.Content.ReadAsStreamAsync().Result);
                 }
 
-                // send redirect request to get reponse      
-                response = await this.SendAsync(newRequest, cancellationToken, redirectCount);
+                var redirectCount = 0;
 
+                // check whether redirect count over maxRedirects
+                while (++redirectCount < maxRedirects)
+                {
+                    // status code == 308 : add permanent redirection to cache 
+                    // TO-DO
+
+                    // status code == 303: change request method from post to get and content to be null
+                    if (response.StatusCode == HttpStatusCode.SeeOther)
+                    {
+                        newRequest.Content = null;
+                        newRequest.Method = HttpMethod.Get;
+                    }
+                    else
+                    {
+                        newRequest.Content = content;
+                        newRequest.Method = request.Method;
+                    }
+
+                    // Set newRequestUri from response
+                    newRequest.RequestUri = response.Headers.Location;
+
+                    // Remove Auth if unneccessary
+                    if (String.Compare(newRequest.RequestUri.Host, request.RequestUri.Host, StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        newRequest.Headers.Authorization = null;
+                    }
+
+                    // Send redirect request to get reponse      
+                    response = await base.SendAsync(newRequest, cancellationToken);
+
+                    // Check response status code
+                    if (!IsRedirect(response.StatusCode))
+                    {
+                        return response;
+                    }
+                }
             }
             return response;
+
         }
 
         /// <summary>
@@ -104,8 +115,6 @@ namespace RedirectHandler
         {
             var newRequest = new HttpRequestMessage(originalRequest.Method, originalRequest.RequestUri);
 
-            newRequest.RequestUri = originalResponse.Headers.Location;
-
             foreach (var header in originalRequest.Headers)
             {
                 newRequest.Headers.TryAddWithoutValidation(header.Key, header.Value);
@@ -116,16 +125,6 @@ namespace RedirectHandler
                 newRequest.Properties.Add(property);
             }
 
-            if (String.Compare(newRequest.RequestUri.Host, originalRequest.RequestUri.Host, StringComparison.OrdinalIgnoreCase) != 0)
-            {
-                newRequest.Headers.Authorization = null;
-            }
-
-            if (originalRequest.Content != null && originalRequest.Content.Headers.ContentLength != 0)
-            {
-                newRequest.Content = new StreamContent(originalRequest.Content.ReadAsStreamAsync().Result);
-            }
-
             return newRequest;
         }
 
@@ -134,7 +133,8 @@ namespace RedirectHandler
         /// </summary>
         /// <param name="originalRequest">The http request message</param>
         /// <returns></returns>
-        private bool CheckRedirectPermanentCache(HttpRequestMessage originalRequest) {
+        private bool CheckRedirectPermanentCache(HttpRequestMessage originalRequest)
+        {
 
             return false;
         }
@@ -149,6 +149,7 @@ namespace RedirectHandler
             return (int)statusCode >= 300 && (int)statusCode < 400 && statusCode != HttpStatusCode.NotModified && statusCode != HttpStatusCode.UseProxy;
         }
 
-        
+
     }
+
 }

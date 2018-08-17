@@ -2,7 +2,8 @@
 
 
 
-namespace RedirectHandler
+namespace Msgraph
+
 {
     using System.Net.Http;
     using System.Threading.Tasks;
