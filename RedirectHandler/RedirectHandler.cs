@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 
+
 namespace Msgraph
 {
     /**
@@ -61,7 +62,7 @@ namespace Msgraph
                 var redirectCount = 0;
 
                 // check whether redirect count over maxRedirects
-                while (++redirectCount < maxRedirects)
+                while (redirectCount++ < maxRedirects)
                 {
                     // status code == 308 : add permanent redirection to cache 
                     // TO-DO
@@ -85,6 +86,7 @@ namespace Msgraph
                     if (String.Compare(newRequest.RequestUri.Host, request.RequestUri.Host, StringComparison.OrdinalIgnoreCase) != 0)
                     {
                         newRequest.Headers.Authorization = null;
+                        
                     }
 
                     // Send redirect request to get reponse      
@@ -96,6 +98,7 @@ namespace Msgraph
                         return response;
                     }
                 }
+                
             }
             return response;
 
