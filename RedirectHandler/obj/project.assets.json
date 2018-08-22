@@ -687,11 +687,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\mending\\source\\repos\\RedirectHandler\\RedirectHandler\\RedirectHandler.csproj",
+      "projectUniqueName": "C:\\Users\\mending\\source\\repos\\workItems\\RedirectHandler\\RedirectHandler\\RedirectHandler.csproj",
       "projectName": "RedirectHandler",
-      "projectPath": "C:\\Users\\mending\\source\\repos\\RedirectHandler\\RedirectHandler\\RedirectHandler.csproj",
+      "projectPath": "C:\\Users\\mending\\source\\repos\\workItems\\RedirectHandler\\RedirectHandler\\RedirectHandler.csproj",
       "packagesPath": "C:\\Users\\mending\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\mending\\source\\repos\\RedirectHandler\\RedirectHandler\\obj\\",
+      "outputPath": "C:\\Users\\mending\\source\\repos\\workItems\\RedirectHandler\\RedirectHandler\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
